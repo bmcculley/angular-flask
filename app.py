@@ -1,19 +1,10 @@
 import sys
 import json
 import argparse
-import requests
 
 from angular_flask import app
 from angular_flask.core import db
 from angular_flask.models import Post
-
-
-def create_sample_db_entry(api_endpoint, payload):
-    url = 'http://localhost:5000/' + api_endpoint
-    r = requests.post(
-        url, data=json.dumps(payload),
-        headers={'Content-Type': 'application/json'})
-    print(r.text)
 
 
 def create_db():
@@ -22,6 +13,7 @@ def create_db():
 
 def drop_db():
     db.drop_all()
+
 
 def runserver(debug, host, port):
     app.run(debug=debug, host=host, port=port)
@@ -34,8 +26,6 @@ def main():
             action='store_true', help='Create the application database.')
     parser.add_argument('-e', '--erase', dest='delete_db', 
             action='store_true', help='Delete the application database.')
-    parser.add_argument('-s', '--seedfile', dest='seedfile',
-            help='The file with data for seeding the database.')
     parser.add_argument('-r', '--runserver', dest='run', 
             action='store_true', help='Start the Flask application server.')
     parser.add_argument('-d', '--debug', dest='debug',  action='store_true',
@@ -61,24 +51,9 @@ def main():
         create_db()
         print("DB created!")
 
-    elif args.delete_db:
+    if args.delete_db:
         drop_db()
         print("DB deleted!")
-
-    # not sure about this yet, i'm thinking it should be removed
-    elif args.seedfile not None:
-        with open(args.seedfile, 'r') as f:
-            seed_data = json.loads(f.read())
-
-        for item_class in seed_data:
-            items = seed_data[item_class]
-            print(items)
-            for item in items:
-                print(item)
-                create_sample_db_entry('api/' + item_class, item)
-        print("\nSample data added to database!")
-    else:
-        raise Exception('Invalid command')
 
 if __name__ == '__main__':
     main()

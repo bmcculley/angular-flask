@@ -1,3 +1,6 @@
+**Note** This isn't current, I will update this information after refactoring 
+is complete.
+
 # AngularJS + Flask Boilerplate App
 
 A template for building apps with an Angular frontend and a Flask / python backend.
