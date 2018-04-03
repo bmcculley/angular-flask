@@ -1,4 +1,4 @@
-import os
+import sys
 import json
 import argparse
 import requests
@@ -13,7 +13,7 @@ def create_sample_db_entry(api_endpoint, payload):
     r = requests.post(
         url, data=json.dumps(payload),
         headers={'Content-Type': 'application/json'})
-    print r.text
+    print(r.text)
 
 
 def create_db():
@@ -23,32 +23,50 @@ def create_db():
 def drop_db():
     db.drop_all()
 
-def runserver():
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+def runserver(debug, host, port):
+    app.run(debug=debug, host=host, port=port)
 
 
 def main():
     parser = argparse.ArgumentParser(
         description='Manage the Flask application.')
-    parser.add_argument('-c', '--create', action='store_true',
-            help='Create the application database.')
-    parser.add_argument('-d', '--delete', action='store_true',
-            help='Delete the application database.')
-    parser.add_argument('-s', '--seedfile', dest="seedfile",
+    parser.add_argument('-c', '--create', dest='create_db', 
+            action='store_true', help='Create the application database.')
+    parser.add_argument('-e', '--erase', dest='delete_db', 
+            action='store_true', help='Delete the application database.')
+    parser.add_argument('-s', '--seedfile', dest='seedfile',
             help='The file with data for seeding the database.')
+    parser.add_argument('-r', '--runserver', dest='run', 
+            action='store_true', help='Start the Flask application server.')
+    parser.add_argument('-d', '--debug', dest='debug',  action='store_true',
+                    help='Start the app in debug mode.')
+    parser.add_argument('-l', '--listen', dest='host', default='127.0.0.1',
+                    help='Where should the server listen. \
+                          Defaults to 127.0.0.1.')
+    parser.add_argument('-p', '--port', dest='port', default=5000,
+                    help='Which port should the server listen on. \
+                          Defaults to 5000.')
+    # if no args were supplied print help and exit
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit()
+
     args = parser.parse_args()
 
-    # runserver()
-    if args.command == 'create_db':
+    # should check if trying to create/delete and/or run in the same command
+
+    if args.run:
+        runserver(debug, host, port)
+    if args.create_db:
         create_db()
         print("DB created!")
 
-    elif args.command == 'delete_db':
+    elif args.delete_db:
         drop_db()
         print("DB deleted!")
 
-    elif args.command == 'seed_db' and args.seedfile:
+    # not sure about this yet, i'm thinking it should be removed
+    elif args.seedfile not None:
         with open(args.seedfile, 'r') as f:
             seed_data = json.loads(f.read())
 
@@ -56,9 +74,8 @@ def main():
             items = seed_data[item_class]
             print(items)
             for item in items:
-                print item
+                print(item)
                 create_sample_db_entry('api/' + item_class, item)
-
         print("\nSample data added to database!")
     else:
         raise Exception('Invalid command')
